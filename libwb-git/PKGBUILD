@@ -6,6 +6,7 @@ arch=('x86_64')
 url="https://github.com/abduld/libwb"
 source=("git://github.com/abduld/libwb.git")
 md5sums=(SKIP)
+makedepend=("cmake")
 
 pkgver() {
 	cd libwb
