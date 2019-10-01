@@ -48,7 +48,7 @@ pkgdesc="Open Source Computer Vision Library (Legacy Version & /opt directory ve
 arch=('i686' 'x86_64')
 license=('BSD')
 url="http://opencv.org/"
-depends=('intel-tbb' 'openexr' 'xine-lib' 'libdc1394' 'gtkglext')
+depends=('intel-tbb' 'openexr' 'xine-lib' 'libdc1394' 'gtkglext' 'openmp')
 makedepends=('cmake' 'python2-numpy' 'mesa' 'eigen2')
 optdepends=('opencv2-opt-samples'
             'eigen2'
@@ -63,17 +63,21 @@ source=(
 )
 sha512sums=('942a523192ac790bc8184dff3b7652efd92dfe786091402a7686a468ae567e1c09b9205e6c56424602a887057a57c31a0b0e4f4f9ca29c1b1856024b8d9ad990'
             '111d2f8407a3937acabd8c60f7d77408aadf9d8acf621ddb2b4312f39155ce14d6c764e7ac36905c90eb279bf7803e30def39e52807adb7516325b7c3adac65e'
-'SKIP'
-'SKIP'
+            'SKIP'
+            'SKIP'
 )
 
-_cmakeopts=('-D WITH_CUDA=ON' # Disable CUDA for now because GCC 6.1.1 and nvcc don't play along yet
+_cmakeopts=(
+            '-D CUDA_HOST_COMPILER=/usr/bin/g++-8'
             '-D CUDA_GENERATION=Pascal'
-            '-D CUDA_HOST_COMPILER="/usr/bin/g++-8"'
+            '-D WITH_CUDA=ON'
             '-D WITH_OPENCL=ON'
             '-D WITH_OPENGL=ON'
+            '-D WITH_CUFFT=ON'
+            '-D WITH_CUBLAS=ON'
             '-D WITH_TBB=ON'
             '-D WITH_XINE=ON'
+            '-D WITH_OPENMP=ON'
             '-D WITH_GSTREAMER=OFF'
             '-D BUILD_WITH_DEBUG_INFO=OFF'
             '-D BUILD_TESTS=OFF'
@@ -117,7 +121,7 @@ build() {
   cd build
 
   cmake ${_cmakeopts[@]} ..
-  make
+  make -j$(nproc)
 }
 package_opencv2-opt() {
   options=('staticlibs')
