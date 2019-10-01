@@ -53,7 +53,7 @@ build() {
     -DLAPACK_CBLAS_H="/usr/include/cblas.h" \
     -DLAPACK_LAPACKE_H="/usr/include/lapacke.h" \
     -DEIGEN_INCLUDE_PATH=`pkg-config --cflags-only-I eigen3 | sed "s/-I//"`
-  make
+  make -j$(nproc)
 }
 
 package_opencv3-opt() {
