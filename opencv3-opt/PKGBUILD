@@ -5,7 +5,7 @@
 pkgbase=opencv3-opt
 pkgname=($pkgbase $pkgbase-samples)
 pkgver=3.4.7
-pkgrel=1
+pkgrel=99
 pkgdesc="Open Source Computer Vision Library (Legacy Version & /opt directory version)"
 arch=(x86_64)
 license=(BSD)
@@ -52,6 +52,8 @@ build() {
     -DLAPACK_LIBRARIES="/usr/lib/liblapack.so;/usr/lib/libblas.so;/usr/lib/libcblas.so" \
     -DLAPACK_CBLAS_H="/usr/include/cblas.h" \
     -DLAPACK_LAPACKE_H="/usr/include/lapacke.h" \
+    -DCMAKE_NO_SYSTEM_FROM_IMPORTED=ON \
+    -DENABLE_PRECOMPILED_HEADERS=OFF \
     -DEIGEN_INCLUDE_PATH=`pkg-config --cflags-only-I eigen3 | sed "s/-I//"`
   make -j$(nproc)
 }
