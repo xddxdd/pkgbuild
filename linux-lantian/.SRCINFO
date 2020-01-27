@@ -1,0 +1,39 @@
+pkgbase = linux-mainline
+	pkgdesc = Linux Mainline
+	pkgver = 5.5rc7
+	pkgrel = 1
+	url = https://kernel.org/
+	arch = x86_64
+	license = GPL2
+	makedepends = bc
+	makedepends = kmod
+	makedepends = libelf
+	makedepends = xmlto
+	makedepends = python-sphinx
+	makedepends = python-sphinx_rtd_theme
+	makedepends = graphviz
+	makedepends = imagemagick
+	makedepends = git
+	options = !strip
+	source = linux-mainline::git+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git#tag=v5.5-rc7
+	source = config
+	validpgpkeys = ABAF11C65A2970B130ABE3C479BE3E4300411886
+	validpgpkeys = 647F28654894E3BD457199BE38DBBDC86092693E
+	validpgpkeys = 8218F88849AAC522E94CF470A5E9288C4FA415FA
+	sha256sums = SKIP
+	sha256sums = b7f23bbc09b6c571b76f851f0389386a6f3a64f3d7b1b8509c8550228b0f4537
+
+pkgname = linux-mainline
+	pkgdesc = The Linux Mainline kernel and modules
+	depends = coreutils
+	depends = kmod
+	depends = initramfs
+	optdepends = crda: to set the correct wireless channels of your country
+	optdepends = linux-firmware: firmware images needed for some devices
+
+pkgname = linux-mainline-headers
+	pkgdesc = Headers and scripts for building modules for the Linux Mainline kernel
+
+pkgname = linux-mainline-docs
+	pkgdesc = Documentation for the Linux Mainline kernel
+
