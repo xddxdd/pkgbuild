@@ -27,6 +27,7 @@ source=(
   config         # the main kernel config file
   0001-ZEN-Add-sysctl-and-CONFIG-to-disallow-unprivileged-C.patch
   0002-qca9377-bluetooth-blacklist.patch
+  "aosc-univt.patch::https://raw.githubusercontent.com/AOSC-Dev/aosc-os-abbs/testing/extra-kernel/linux-kernel/autobuild/patches/8000-aosc-feature-univt.patch" # CJK Patch
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -34,6 +35,7 @@ validpgpkeys=(
   '8218F88849AAC522E94CF470A5E9288C4FA415FA'  # Jan Alexander Steffens (heftig)
 )
 sha256sums=(
+  'SKIP'
   'SKIP'
   'SKIP'
   'SKIP'
