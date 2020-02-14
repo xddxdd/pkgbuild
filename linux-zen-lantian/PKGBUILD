@@ -9,7 +9,7 @@
 pkgbase=linux-zen-lantian               # Build stock -ARCH kernel
 #pkgbase=linux-custom       # Build kernel with a different name
 
-pkgver=5.3.18.lqx1
+pkgver=5.5.2.lqx2
 pkgrel=1
 _srctag=v${pkgver%.*}-${pkgver##*.}
 
@@ -28,6 +28,7 @@ source=(
   "$_srcname::git+https://github.com/zen-kernel/zen-kernel.git#tag=$_srctag"
   config         # the main kernel config file
   0002-qca9377-bluetooth-blacklist.patch
+  0003-zfs-gpl-symbol.patch
   "aosc-univt.patch::https://raw.githubusercontent.com/AOSC-Dev/aosc-os-abbs/testing/extra-kernel/linux-kernel/autobuild/patches/8000-aosc-feature-univt.patch" # CJK Patch
 )
 validpgpkeys=(
@@ -36,6 +37,7 @@ validpgpkeys=(
   '8218F88849AAC522E94CF470A5E9288C4FA415FA'  # Jan Alexander Steffens (heftig)
 )
 sha256sums=(
+  'SKIP'
   'SKIP'
   'SKIP'
   'SKIP'
