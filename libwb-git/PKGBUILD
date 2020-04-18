@@ -1,5 +1,5 @@
 pkgname=libwb-git
-pkgver=r216.3f2154f
+pkgver=r228.5b93896
 pkgrel=1
 pkgdesc="WebGPU local development library"
 arch=('x86_64')
@@ -15,14 +15,13 @@ pkgver() {
 
 build() {
 	cd $srcdir/libwb
-	cmake .
-	make -j8
+	make -j8 CXX=g++-8
 }
 
 package() {
 	mkdir -p $pkgdir/usr/lib
 	mkdir -p $pkgdir/usr/include
-	cp $srcdir/libwb/libwb.so $pkgdir/usr/lib/
+	cp $srcdir/libwb/lib/libwb.so $pkgdir/usr/lib/
 	cp $srcdir/libwb/*.h $pkgdir/usr/include/
 	cp -r $srcdir/libwb/vendor $pkgdir/usr/include/
 }
