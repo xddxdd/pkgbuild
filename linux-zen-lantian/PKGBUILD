@@ -29,7 +29,9 @@ source=(
   config         # the main kernel config file
   0001-drm-i915-gvt-Add-virtual-option-ROM-emulation.patch
   0002-qca9377-bluetooth-blacklist.patch
-  "aosc-univt.patch::https://raw.githubusercontent.com/AOSC-Dev/aosc-os-abbs/stable-proposed/extra-kernel/linux-kernel/autobuild/patches/8000-aosc-feature-univt.patch" # CJK Patch
+  "0003-uksm.patch::https://raw.githubusercontent.com/dolohow/uksm/master/v5.x/uksm-5.7.patch"
+  #"8000-aosc-feature-univt.patch::https://raw.githubusercontent.com/AOSC-Dev/aosc-os-abbs/stable-proposed/extra-kernel/linux-kernel/autobuild/patches/8000-aosc-feature-univt.patch" # CJK Patch
+  8000-aosc-feature-univt.patch
   sphinx-workaround.patch
 )
 validpgpkeys=(
@@ -38,6 +40,7 @@ validpgpkeys=(
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
 sha256sums=(
+  'SKIP'
   'SKIP'
   'SKIP'
   'SKIP'
