@@ -30,9 +30,9 @@ source=(
   0001-drm-i915-gvt-Add-virtual-option-ROM-emulation.patch
   0002-qca9377-bluetooth-blacklist.patch
   "0003-uksm.patch::https://raw.githubusercontent.com/dolohow/uksm/master/v5.x/uksm-5.7.patch"
+  0004-sphinx-workaround.patch
   #"8000-aosc-feature-univt.patch::https://raw.githubusercontent.com/AOSC-Dev/aosc-os-abbs/stable-proposed/extra-kernel/linux-kernel/autobuild/patches/8000-aosc-feature-univt.patch" # CJK Patch
   8000-aosc-feature-univt.patch
-  sphinx-workaround.patch
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
