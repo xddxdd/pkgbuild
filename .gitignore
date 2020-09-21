@@ -1,3 +1,10 @@
 *.tar.*
 pkg
 src
+
+chromium-vaapi-oqs/boringssl
+chromium-vaapi-oqs/liboqs
+
+linux-lantian/linux-lantian
+
+linux-zen-lantian/linux-zen-lantian
