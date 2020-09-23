@@ -9,7 +9,7 @@
 pkgbase=linux-zen-lantian               # Build stock -ARCH kernel
 #pkgbase=linux-custom       # Build kernel with a different name
 
-pkgver=5.8.5.zen1
+pkgver=5.8.10.zen1
 pkgrel=1
 _srctag=v${pkgver%.*}-${pkgver##*.}
 
@@ -31,8 +31,7 @@ source=(
   0002-qca9377-bluetooth-blacklist.patch
   "0003-uksm.patch::https://raw.githubusercontent.com/dolohow/uksm/master/v5.x/uksm-5.8.patch"
   0004-sphinx-workaround.patch
-  #"8000-aosc-feature-univt.patch::https://raw.githubusercontent.com/AOSC-Dev/aosc-os-abbs/stable-proposed/extra-kernel/linux-kernel/autobuild/patches/8000-aosc-feature-univt.patch" # CJK Patch
-  8000-aosc-feature-univt.patch
+  #"https://raw.githubusercontent.com/AOSC-Dev/aosc-os-abbs/stable-proposed/extra-kernel/linux-kernel/autobuild/patches/8000-feature-aosc-univt.patch" # CJK Patch
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -46,7 +45,7 @@ sha256sums=(
   'SKIP'
   'SKIP'
   'SKIP'
-  'SKIP'
+  #'SKIP'
 )
 
 export KBUILD_BUILD_HOST=archlinux
