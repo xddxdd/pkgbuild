@@ -9,7 +9,7 @@
 pkgbase=linux-zen-lantian               # Build stock -ARCH kernel
 #pkgbase=linux-custom       # Build kernel with a different name
 
-pkgver=5.9.zen1
+pkgver=5.9.2.zen1
 pkgrel=1
 _srctag=v${pkgver%.*}-${pkgver##*.}
 
@@ -18,8 +18,8 @@ arch=(x86_64)
 url="https://github.com/zen-kernel/zen-kernel/commits/$_srctag"
 license=(GPL2)
 makedepends=(
-  bc kmod libelf
-  xmlto python-sphinx python-sphinx_rtd_theme graphviz imagemagick
+  bc kmod libelf pahole
+  xmlto
   git
 )
 options=('!strip')
@@ -30,7 +30,6 @@ source=(
   0001-drm-i915-gvt-Add-virtual-option-ROM-emulation.patch
   0002-qca9377-bluetooth-blacklist.patch
   "0003-uksm.patch::https://raw.githubusercontent.com/dolohow/uksm/master/v5.x/uksm-5.9.patch"
-  0004-sphinx-workaround.patch
   #"https://raw.githubusercontent.com/AOSC-Dev/aosc-os-abbs/stable-proposed/extra-kernel/linux-kernel/autobuild/patches/8000-feature-aosc-univt.patch" # CJK Patch
 )
 validpgpkeys=(
@@ -44,8 +43,6 @@ sha256sums=(
   'SKIP'
   'SKIP'
   'SKIP'
-  'SKIP'
-  #'SKIP'
 )
 
 export KBUILD_BUILD_HOST=archlinux
@@ -79,7 +76,7 @@ prepare() {
 
 build() {
   cd $_srcname
-  make bzImage modules htmldocs
+  make all
 }
 
 _package() {
@@ -188,29 +185,7 @@ _package-headers() {
   chmod -Rc u=rwX,go=rX "$pkgdir"
 }
 
-_package-docs() {
-  pkgdesc="Documentation for the $pkgdesc kernel"
-
-  cd $_srcname
-  local builddir="$pkgdir/usr/lib/modules/$(<version)/build"
-
-  echo "Installing documentation..."
-  local src dst
-  while read -rd '' src; do
-    dst="${src#Documentation/}"
-    dst="$builddir/Documentation/${dst#output/}"
-    install -Dm644 "$src" "$dst"
-  done < <(find Documentation -name '.*' -prune -o ! -type d -print0)
-
-  echo "Adding symlink..."
-  mkdir -p "$pkgdir/usr/share/doc"
-  ln -sr "$builddir/Documentation" "$pkgdir/usr/share/doc/$pkgbase"
-
-  echo "Fixing permissions..."
-  chmod -Rc u=rwX,go=rX "$pkgdir"
-}
-
-pkgname=("$pkgbase" "$pkgbase-headers" "$pkgbase-docs")
+pkgname=("$pkgbase" "$pkgbase-headers")
 for _p in "${pkgname[@]}"; do
   eval "package_$_p() {
     $(declare -f "_package${_p#$pkgbase}")
