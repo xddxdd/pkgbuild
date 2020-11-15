@@ -9,7 +9,7 @@
 pkgbase=linux-zen-lantian               # Build stock -ARCH kernel
 #pkgbase=linux-custom       # Build kernel with a different name
 
-pkgver=5.9.2.zen1
+pkgver=5.9.8.zen1
 pkgrel=1
 _srctag=v${pkgver%.*}-${pkgver##*.}
 
@@ -29,8 +29,13 @@ source=(
   config         # the main kernel config file
   0001-drm-i915-gvt-Add-virtual-option-ROM-emulation.patch
   0002-qca9377-bluetooth-blacklist.patch
-  "0003-uksm.patch::https://raw.githubusercontent.com/dolohow/uksm/master/v5.x/uksm-5.9.patch"
-  #"https://raw.githubusercontent.com/AOSC-Dev/aosc-os-abbs/stable-proposed/extra-kernel/linux-kernel/autobuild/patches/8000-feature-aosc-univt.patch" # CJK Patch
+
+  # (MODIFIED) https://raw.githubusercontent.com/dolohow/uksm/master/v5.x/uksm-5.9.patch
+  0003-uksm.patch
+  0004-reiser4.patch # https://sourceforge.net/projects/reiser4/
+  "0005-add-acs-overrides_iommu.patch::https://github.com/Frogging-Family/linux-tkg/raw/master/linux-tkg-patches/5.9/0006-add-acs-overrides_iommu.patch"
+
+  # (BROKEN) "https://github.com/AOSC-Dev/aosc-os-abbs/raw/stable/extra-kernel/linux-kernel/autobuild/patches/8000-feature-aosc-univt.patch" # CJK Patch
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -38,6 +43,8 @@ validpgpkeys=(
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
 sha256sums=(
+  'SKIP'
+  'SKIP'
   'SKIP'
   'SKIP'
   'SKIP'
