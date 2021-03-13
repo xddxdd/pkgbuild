@@ -9,7 +9,7 @@
 pkgbase=linux-zen-lantian               # Build stock -ARCH kernel
 #pkgbase=linux-custom       # Build kernel with a different name
 
-pkgver=5.11.zen2
+pkgver=5.11.6.zen1
 pkgrel=1
 _srctag=v${pkgver%.*}-${pkgver##*.}
 
