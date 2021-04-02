@@ -1,0 +1,72 @@
+pkgname=chromium-oqs-bin
+pkgver=0.5.0
+pkgrel=1
+pkgdesc="Chromium with Open Quantum Safe"
+arch=('x86_64')
+url="https://www.chromium.org/Home"
+license=('BSD')
+depends=('gtk3' 'nss' 'alsa-lib' 'xdg-utils' 'libxss' 'libcups' 'libgcrypt'
+         'ttf-liberation' 'systemd' 'dbus' 'libpulse' 'pciutils' 'json-glib'
+         'desktop-file-utils' 'hicolor-icon-theme')
+optdepends=('pepper-flash: support for Flash content'
+            'libpipewire02: WebRTC desktop sharing under Wayland'
+            'libva: hardware-accelerated video decode [experimental]'
+            'kdialog: needed for file dialogs in KDE'
+            'org.freedesktop.secrets: password storage backend on GNOME / Xfce'
+            'kwallet: for storing passwords in KWallet on KDE desktops')
+provides=('chromium')
+conflicts=('chromium')
+source=(
+  https://github.com/open-quantum-safe/oqs-demos/releases/download/v$pkgver/chromium-ubuntu-$pkgver.tgz
+  'chromium-16.png'
+  'chromium-24.png'
+  'chromium-32.png'
+  'chromium-48.png'
+  'chromium-64.png'
+  'chromium-128.png'
+  'chromium-256.png'
+  'chromium.desktop'
+)
+noextract=(chromium-ubuntu-$pkgver.tgz)
+sha256sums=(
+  'SKIP'
+  'SKIP'
+  'SKIP'
+  'SKIP'
+  'SKIP'
+  'SKIP'
+  'SKIP'
+  'SKIP'
+  'SKIP'
+)
+
+prepare() {
+  true
+}
+
+build() {
+  mkdir -p "$srcdir/chromium"
+  cd "$srcdir/chromium"
+  tar xf "$srcdir/chromium-ubuntu-$pkgver.tgz"
+}
+
+package() {
+  mkdir -p "$pkgdir/usr/lib"
+  cd "chromium"
+
+  cd "$srcdir/chromium"
+  cp -r "$srcdir/chromium" "$pkgdir/usr/lib/"
+
+  mkdir -p "$pkgdir/usr/bin"
+  ln -s /usr/lib/chromium/chrome "$pkgdir/usr/bin/chrome"
+  ln -s /usr/lib/chromium/chrome "$pkgdir/usr/bin/chromium"
+
+  install -Dm644 $srcdir/chromium.desktop "$pkgdir/usr/share/applications/chromium.desktop"
+
+  for size in 24 48 64 128 256; do
+    install -Dm644 "$srcdir/chromium-$size.png" \
+      "$pkgdir/usr/share/icons/hicolor/${size}x${size}/apps/chromium.png"
+  done
+}
+
+# vim:set ts=2 sw=2 et:
