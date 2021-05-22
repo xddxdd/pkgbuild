@@ -6,16 +6,15 @@
 # Maintainer: Tobias Powalowski <tpowa@archlinux.org>
 # Maintainer: Thomas Baechler <thomas@archlinux.org>
 
-pkgbase=linux-zen-lantian               # Build stock -ARCH kernel
-#pkgbase=linux-custom       # Build kernel with a different name
+pkgbase=linux-xanmod-lantian               # Build stock -ARCH kernel
 
-pkgver=5.11.16.zen1
+_srctag=5.12.5-xanmod1-cacule
+pkgver=${_srctag//-/.}
 pkgrel=1
-_srctag=v${pkgver%.*}-${pkgver##*.}
 
 pkgdesc="Linux Lan Tian Custom Build"
 arch=(x86_64)
-url="https://github.com/zen-kernel/zen-kernel/commits/$_srctag"
+url="https://github.com/xanmod/linux/commits/$_srctag"
 license=(GPL2)
 makedepends=(
   bc kmod libelf pahole
@@ -23,9 +22,9 @@ makedepends=(
   git
 )
 options=('!strip')
-_srcname=linux-zen-lantian
+_srcname=linux-xanmod-lantian
 source=(
-  "$_srcname::git+https://github.com/zen-kernel/zen-kernel.git#tag=$_srctag"
+  "$_srcname::git+https://github.com/xanmod/linux.git#tag=$_srctag"
   config         # the main kernel config file
   0001-drm-i915-gvt-Add-virtual-option-ROM-emulation.patch
   0002-qca9377-bluetooth-blacklist.patch
@@ -53,8 +52,6 @@ prepare() {
 
   echo "Setting version..."
   scripts/setlocalversion --save-scmversion
-  echo "-$pkgrel" > localversion.10-pkgrel
-  echo "${pkgbase#linux}" > localversion.20-pkgname
 
   local src
   for src in "${source[@]}"; do
@@ -114,7 +111,7 @@ _package-headers() {
 
   echo "Installing build files..."
   install -Dt "$builddir" -m644 .config Makefile Module.symvers System.map \
-    localversion.* version vmlinux
+    version vmlinux
   install -Dt "$builddir/kernel" -m644 kernel/Makefile
   install -Dt "$builddir/arch/x86" -m644 arch/x86/Makefile
   cp -t "$builddir" -a scripts
