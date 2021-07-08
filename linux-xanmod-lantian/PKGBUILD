@@ -8,7 +8,7 @@
 
 pkgbase=linux-xanmod-lantian               # Build stock -ARCH kernel
 
-_srctag=5.12.5-xanmod1-cacule
+_srctag=5.12.11-xanmod1-cacule
 pkgver=${_srctag//-/.}
 pkgrel=1
 
