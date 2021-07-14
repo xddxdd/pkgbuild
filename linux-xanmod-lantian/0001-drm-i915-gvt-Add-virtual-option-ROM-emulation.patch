@@ -1,5 +1,5 @@
 diff --git a/drivers/gpu/drm/i915/gvt/cfg_space.c b/drivers/gpu/drm/i915/gvt/cfg_space.c
-index 072725a448db..1fb90cd3370d 100644
+index b490e3db2e38..1dcda59ee225 100644
 --- a/drivers/gpu/drm/i915/gvt/cfg_space.c
 +++ b/drivers/gpu/drm/i915/gvt/cfg_space.c
 @@ -34,13 +34,6 @@
@@ -16,7 +16,7 @@ index 072725a448db..1fb90cd3370d 100644
  /* bitmap for writable bits (RW or RW1C bits, but cannot co-exist in one
   * byte) byte by byte in standard pci configuration space. (not the full
   * 256 bytes.)
-@@ -214,9 +207,10 @@ static int emulate_pci_rom_bar_write(struct intel_vgpu *vgpu,
+@@ -224,9 +217,10 @@ static int emulate_pci_rom_bar_write(struct intel_vgpu *vgpu,
  
  	if ((new & PCI_ROM_ADDRESS_MASK) == PCI_ROM_ADDRESS_MASK)
  		/* We don't have rom, return size of 0. */
@@ -28,7 +28,7 @@ index 072725a448db..1fb90cd3370d 100644
  	return 0;
  }
  
-@@ -393,12 +387,14 @@ void intel_vgpu_init_cfg_space(struct intel_vgpu *vgpu,
+@@ -405,12 +399,14 @@ void intel_vgpu_init_cfg_space(struct intel_vgpu *vgpu,
  	memset(vgpu_cfg_space(vgpu) + PCI_BASE_ADDRESS_1, 0, 4);
  	memset(vgpu_cfg_space(vgpu) + PCI_BASE_ADDRESS_3, 0, 4);
  	memset(vgpu_cfg_space(vgpu) + PCI_BASE_ADDRESS_4, 0, 8);
@@ -36,18 +36,18 @@ index 072725a448db..1fb90cd3370d 100644
  	memset(vgpu_cfg_space(vgpu) + INTEL_GVT_PCI_OPREGION, 0, 4);
  
  	vgpu->cfg_space.bar[INTEL_GVT_PCI_BAR_GTTMMIO].size =
- 		pci_resource_len(gvt->gt->i915->drm.pdev, 0);
+ 		pci_resource_len(pdev, 0);
  	vgpu->cfg_space.bar[INTEL_GVT_PCI_BAR_APERTURE].size =
- 		pci_resource_len(gvt->gt->i915->drm.pdev, 2);
+ 		pci_resource_len(pdev, 2);
 +	vgpu->cfg_space.bar[INTEL_GVT_PCI_BAR_ROM].size = 32*1024;
  
  	memset(vgpu_cfg_space(vgpu) + PCI_ROM_ADDRESS, 0, 4);
- }
+ 
 diff --git a/drivers/gpu/drm/i915/gvt/gvt.h b/drivers/gpu/drm/i915/gvt/gvt.h
-index 58c2c7932e3f..d0006e801b29 100644
+index 0c0615602343..f49a1484ca0d 100644
 --- a/drivers/gpu/drm/i915/gvt/gvt.h
 +++ b/drivers/gpu/drm/i915/gvt/gvt.h
-@@ -516,6 +516,14 @@ int intel_vgpu_emulate_cfg_write(struct intel_vgpu *vgpu, unsigned int offset,
+@@ -541,6 +541,14 @@ int intel_vgpu_emulate_cfg_write(struct intel_vgpu *vgpu, unsigned int offset,
  
  void intel_vgpu_emulate_hotplug(struct intel_vgpu *vgpu, bool connected);
  
@@ -63,7 +63,7 @@ index 58c2c7932e3f..d0006e801b29 100644
  {
  	/* We are 64bit bar. */
 diff --git a/drivers/gpu/drm/i915/gvt/kvmgt.c b/drivers/gpu/drm/i915/gvt/kvmgt.c
-index eee530453aa6..40acabc222b3 100644
+index 48b4d4cf805d..48d90c8d20b5 100644
 --- a/drivers/gpu/drm/i915/gvt/kvmgt.c
 +++ b/drivers/gpu/drm/i915/gvt/kvmgt.c
 @@ -49,6 +49,8 @@
@@ -75,7 +75,7 @@ index eee530453aa6..40acabc222b3 100644
  static const struct intel_gvt_ops *intel_gvt_ops;
  
  /* helper macros copied from vfio-pci */
-@@ -996,6 +998,23 @@ static int intel_vgpu_aperture_rw(struct intel_vgpu *vgpu, u64 off,
+@@ -1094,6 +1096,23 @@ static int intel_vgpu_aperture_rw(struct intel_vgpu *vgpu, u64 off,
  	return 0;
  }
  
@@ -99,7 +99,7 @@ index eee530453aa6..40acabc222b3 100644
  static ssize_t intel_vgpu_rw(struct mdev_device *mdev, char *buf,
  			size_t count, loff_t *ppos, bool is_write)
  {
-@@ -1027,12 +1046,16 @@ static ssize_t intel_vgpu_rw(struct mdev_device *mdev, char *buf,
+@@ -1125,12 +1144,16 @@ static ssize_t intel_vgpu_rw(struct mdev_device *mdev, char *buf,
  	case VFIO_PCI_BAR2_REGION_INDEX:
  		ret = intel_vgpu_aperture_rw(vgpu, pos, buf, count, is_write);
  		break;
@@ -117,7 +117,7 @@ index eee530453aa6..40acabc222b3 100644
  		break;
  	default:
  		if (index >= VFIO_PCI_NUM_REGIONS + vdev->num_regions)
-@@ -1440,6 +1463,11 @@ static long intel_vgpu_ioctl(struct mdev_device *mdev, unsigned int cmd,
+@@ -1538,6 +1561,11 @@ static long intel_vgpu_ioctl(struct mdev_device *mdev, unsigned int cmd,
  			break;
  
  		case VFIO_PCI_ROM_REGION_INDEX:
