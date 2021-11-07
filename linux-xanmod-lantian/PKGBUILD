@@ -8,7 +8,7 @@
 
 pkgbase=linux-xanmod-lantian               # Build stock -ARCH kernel
 
-_srctag=5.13.1-xanmod1-cacule
+_srctag=5.15.0-xanmod1
 pkgver=${_srctag//-/.}
 pkgrel=1
 
@@ -27,8 +27,7 @@ source=(
   "$_srcname::git+https://github.com/xanmod/linux.git#tag=$_srctag"
   config         # the main kernel config file
   0001-drm-i915-gvt-Add-virtual-option-ROM-emulation.patch
-  0002-qca9377-bluetooth-blacklist.patch
-  0003-qcserial.patch
+  0002-qcserial.patch
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -36,7 +35,6 @@ validpgpkeys=(
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
 sha256sums=(
-  'SKIP'
   'SKIP'
   'SKIP'
   'SKIP'
