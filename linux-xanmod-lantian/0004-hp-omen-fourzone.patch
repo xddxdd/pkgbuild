@@ -1,5 +1,5 @@
 diff --git a/drivers/platform/x86/hp-wmi.c b/drivers/platform/x86/hp-wmi.c
-index 027a1467d009..15bd2ede4ea4 100644
+index 027a1467d009..2b9203dd9c54 100644
 --- a/drivers/platform/x86/hp-wmi.c
 +++ b/drivers/platform/x86/hp-wmi.c
 @@ -9,6 +9,9 @@
@@ -104,20 +104,23 @@ index 027a1467d009..15bd2ede4ea4 100644
  	switch (event_id) {
  	case HPWMI_DOCK_EVENT:
  		if (test_bit(SW_DOCK, hp_wmi_input_dev->swbit))
-@@ -590,8 +630,11 @@ static void hp_wmi_notify(u32 value, void *context)
+@@ -590,7 +630,15 @@ static void hp_wmi_notify(u32 value, void *context)
  	case HPWMI_SMART_ADAPTER:
  		break;
  	case HPWMI_BEZEL_BUTTON:
 +	case HPWMI_OMEN_KEY:
++		// Some hotkey values reside in event_data.
  		key_code = hp_wmi_read_int(HPWMI_HOTKEY_QUERY);
--		if (key_code < 0)
++		if (!key_code)
++			key_code = event_data;
++
 +		// Some hotkeys generate both press and release events
 +		// Just drop the release events.
-+		if (key_code < 0 || (key_code & HPWMI_HOTKEY_RELEASE_FLAG))
++		key_code = key_code & ~HPWMI_HOTKEY_RELEASE_FLAG;
+ 		if (key_code < 0)
  			break;
  
- 		if (!sparse_keymap_report_event(hp_wmi_input_dev,
-@@ -973,6 +1016,231 @@ static int thermal_profile_setup(void)
+@@ -973,6 +1021,231 @@ static int thermal_profile_setup(void)
  	return 0;
  }
  
@@ -349,7 +352,7 @@ index 027a1467d009..15bd2ede4ea4 100644
  static int __init hp_wmi_bios_setup(struct platform_device *device)
  {
  	/* clear detected rfkill devices */
-@@ -984,6 +1252,8 @@ static int __init hp_wmi_bios_setup(struct platform_device *device)
+@@ -984,6 +1257,8 @@ static int __init hp_wmi_bios_setup(struct platform_device *device)
  	if (hp_wmi_rfkill_setup(device))
  		hp_wmi_rfkill2_setup(device);
  
