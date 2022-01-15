@@ -1,5 +1,5 @@
 diff --git a/drivers/platform/x86/hp-wmi.c b/drivers/platform/x86/hp-wmi.c
-index 027a1467d009..2b9203dd9c54 100644
+index 48a46466f086..41898c898084 100644
 --- a/drivers/platform/x86/hp-wmi.c
 +++ b/drivers/platform/x86/hp-wmi.c
 @@ -9,6 +9,9 @@
@@ -12,7 +12,7 @@ index 027a1467d009..2b9203dd9c54 100644
   */
  
  #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-@@ -63,6 +66,7 @@ enum hp_wmi_event_ids {
+@@ -84,6 +87,7 @@ enum hp_wmi_event_ids {
  	HPWMI_BACKLIT_KB_BRIGHTNESS	= 0x0D,
  	HPWMI_PEAKSHIFT_PERIOD		= 0x0F,
  	HPWMI_BATTERY_CHARGE_PERIOD	= 0x10,
@@ -20,7 +20,7 @@ index 027a1467d009..2b9203dd9c54 100644
  };
  
  struct bios_args {
-@@ -87,12 +91,20 @@ enum hp_wmi_commandtype {
+@@ -108,6 +112,13 @@ enum hp_wmi_commandtype {
  	HPWMI_WIRELESS2_QUERY		= 0x1b,
  	HPWMI_POSTCODEERROR_QUERY	= 0x2a,
  	HPWMI_THERMAL_PROFILE_QUERY	= 0x4c,
@@ -33,15 +33,16 @@ index 027a1467d009..2b9203dd9c54 100644
 +	HPWMI_FOURZONE_ANIM_SET		= 7,
  };
  
- enum hp_wmi_command {
- 	HPWMI_READ	= 0x01,
+ enum hp_wmi_gm_commandtype {
+@@ -122,6 +133,7 @@ enum hp_wmi_command {
  	HPWMI_WRITE	= 0x02,
  	HPWMI_ODM	= 0x03,
-+	HPWMI_FOURZONE	= 131081,
+ 	HPWMI_GM	= 0x20008,
++	HPWMI_FOURZONE	= 0x20009,
  };
  
  enum hp_wmi_hardware_mask {
-@@ -151,6 +163,9 @@ struct bios_rfkill2_state {
+@@ -186,6 +198,9 @@ struct bios_rfkill2_state {
  	struct bios_rfkill2_device_state device[HPWMI_MAX_RFKILL2_DEVICES];
  };
  
@@ -51,7 +52,7 @@ index 027a1467d009..2b9203dd9c54 100644
  static const struct key_entry hp_wmi_keymap[] = {
  	{ KE_KEY, 0x02,   { KEY_BRIGHTNESSUP } },
  	{ KE_KEY, 0x03,   { KEY_BRIGHTNESSDOWN } },
-@@ -161,6 +176,10 @@ static const struct key_entry hp_wmi_keymap[] = {
+@@ -196,6 +211,10 @@ static const struct key_entry hp_wmi_keymap[] = {
  	{ KE_KEY, 0x2169, { KEY_ROTATE_DISPLAY } },
  	{ KE_KEY, 0x216a, { KEY_SETUP } },
  	{ KE_KEY, 0x231b, { KEY_HELP } },
@@ -62,7 +63,7 @@ index 027a1467d009..2b9203dd9c54 100644
  	{ KE_END, 0 }
  };
  
-@@ -182,6 +201,18 @@ struct rfkill2_device {
+@@ -217,6 +236,18 @@ struct rfkill2_device {
  static int rfkill2_count;
  static struct rfkill2_device rfkill2[HPWMI_MAX_RFKILL2_DEVICES];
  
@@ -81,7 +82,7 @@ index 027a1467d009..2b9203dd9c54 100644
  /* map output size to the corresponding WMI method id */
  static inline int encode_outsize_for_pvsz(int outsize)
  {
-@@ -542,6 +573,14 @@ static void hp_wmi_notify(u32 value, void *context)
+@@ -662,6 +693,14 @@ static void hp_wmi_notify(u32 value, void *context)
  	int key_code;
  
  	status = wmi_get_event_data(value, &response);
@@ -96,7 +97,7 @@ index 027a1467d009..2b9203dd9c54 100644
  	if (status != AE_OK) {
  		pr_info("bad event status 0x%x\n", status);
  		return;
-@@ -575,6 +614,7 @@ static void hp_wmi_notify(u32 value, void *context)
+@@ -695,6 +734,7 @@ static void hp_wmi_notify(u32 value, void *context)
  	}
  	kfree(obj);
  
@@ -104,7 +105,7 @@ index 027a1467d009..2b9203dd9c54 100644
  	switch (event_id) {
  	case HPWMI_DOCK_EVENT:
  		if (test_bit(SW_DOCK, hp_wmi_input_dev->swbit))
-@@ -590,7 +630,15 @@ static void hp_wmi_notify(u32 value, void *context)
+@@ -710,7 +750,15 @@ static void hp_wmi_notify(u32 value, void *context)
  	case HPWMI_SMART_ADAPTER:
  		break;
  	case HPWMI_BEZEL_BUTTON:
@@ -120,9 +121,9 @@ index 027a1467d009..2b9203dd9c54 100644
  		if (key_code < 0)
  			break;
  
-@@ -973,6 +1021,231 @@ static int thermal_profile_setup(void)
- 	return 0;
- }
+@@ -1166,6 +1214,231 @@ static int thermal_profile_setup(void)
+ 
+ static int hp_wmi_hwmon_init(void);
  
 +/* Support for the HP Omen FourZone keyboard lighting */
 +
@@ -351,10 +352,10 @@ index 027a1467d009..2b9203dd9c54 100644
 +
  static int __init hp_wmi_bios_setup(struct platform_device *device)
  {
- 	/* clear detected rfkill devices */
-@@ -984,6 +1257,8 @@ static int __init hp_wmi_bios_setup(struct platform_device *device)
- 	if (hp_wmi_rfkill_setup(device))
- 		hp_wmi_rfkill2_setup(device);
+ 	int err;
+@@ -1183,6 +1456,8 @@ static int __init hp_wmi_bios_setup(struct platform_device *device)
+ 	if (err < 0)
+ 		return err;
  
 +	fourzone_setup(device);
 +
