@@ -32,6 +32,10 @@ source=(
   0003-intel-drm-use-max-clock.patch
   # Extracted from https://github.com/pelrun/hp-omen-linux-module
   0004-hp-omen-fourzone.patch
+  # Adapted from https://github.com/zhmars/cjktty-patches
+  0005-cjktty.patch
+  # https://gitlab.com/sirlucjan/kernel-patches
+  0006-uksm.patch::https://gitlab.com/sirlucjan/kernel-patches/-/raw/master/5.16/uksm-patches/0001-UKSM-for-5.16.patch
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -39,6 +43,8 @@ validpgpkeys=(
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
 sha256sums=(
+  'SKIP'
+  'SKIP'
   'SKIP'
   'SKIP'
   'SKIP'
