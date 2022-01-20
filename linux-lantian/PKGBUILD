@@ -8,29 +8,34 @@
 
 pkgbase=linux-lantian               # Build stock -ARCH kernel
 #pkgbase=linux-custom       # Build kernel with a different name
-_tag=v5.8
-pkgver=5.8
+pkgver=5.16.2
 pkgrel=1
 pkgdesc="Linux Lan Tian"
 arch=(x86_64)
 url="https://kernel.org/"
 license=(GPL2)
 makedepends=(
-  bc kmod libelf
+  bc kmod libelf pahole cpio perl tar xz
   xmlto python-sphinx python-sphinx_rtd_theme graphviz imagemagick
   git
 )
 options=('!strip')
-_srcname=linux-lantian
+_srcname=linux-$pkgver
 source=(
-  "$_srcname::git+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git#tag=$_tag"
+  "https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-$pkgver.tar.xz"
   config         # the main kernel config file
   0001-drm-i915-gvt-Add-virtual-option-ROM-emulation.patch
-  0002-qca9377-bluetooth-blacklist.patch
-  "0003-uksm.patch::https://raw.githubusercontent.com/dolohow/uksm/master/v5.x/uksm-5.8.patch"
-  0004-sphinx-workaround.patch
-  #"8000-aosc-feature-univt.patch::https://raw.githubusercontent.com/AOSC-Dev/aosc-os-abbs/stable-proposed/extra-kernel/linux-kernel/autobuild/patches/8000-aosc-feature-univt.patch" # CJK Patch
-  8000-aosc-feature-univt.patch
+  0002-qcserial.patch
+  # https://gitlab.freedesktop.org/drm/intel/-/issues/125
+  0003-intel-drm-use-max-clock.patch
+  # Extracted from https://github.com/pelrun/hp-omen-linux-module
+  0004-hp-omen-fourzone.patch
+  # Adapted from https://github.com/zhmars/cjktty-patches
+  0005-cjktty.patch
+  # https://gitlab.com/sirlucjan/kernel-patches
+  0006-uksm.patch::https://gitlab.com/sirlucjan/kernel-patches/-/raw/master/5.16/uksm-patches/0001-UKSM-for-5.16.patch
+  # https://lore.kernel.org/lkml/20211115133640.2231-1-abhsahu@nvidia.com/T/
+  0007-vfio-pci-d3cold.patch
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -38,6 +43,8 @@ validpgpkeys=(
   '8218F88849AAC522E94CF470A5E9288C4FA415FA'  # Jan Alexander Steffens (heftig)
 )
 sha256sums=(
+  'SKIP'
+  'SKIP'
   'SKIP'
   'SKIP'
   'SKIP'
@@ -187,29 +194,7 @@ _package-headers() {
   chmod -Rc u=rwX,go=rX "$pkgdir"
 }
 
-_package-docs() {
-  pkgdesc="Documentation for the $pkgdesc kernel"
-
-  cd $_srcname
-  local builddir="$pkgdir/usr/lib/modules/$(<version)/build"
-
-  msg2 "Installing documentation..."
-  local src dst
-  while read -rd '' src; do
-    dst="${src#Documentation/}"
-    dst="$builddir/Documentation/${dst#output/}"
-    install -Dm644 "$src" "$dst"
-  done < <(find Documentation -name '.*' -prune -o ! -type d -print0)
-
-  msg2 "Adding symlink..."
-  mkdir -p "$pkgdir/usr/share/doc"
-  ln -sr "$builddir/Documentation" "$pkgdir/usr/share/doc/$pkgbase"
-
-  msg2 "Fixing permissions..."
-  chmod -Rc u=rwX,go=rX "$pkgdir"
-}
-
-pkgname=("$pkgbase" "$pkgbase-headers" "$pkgbase-docs")
+pkgname=("$pkgbase" "$pkgbase-headers")
 for _p in "${pkgname[@]}"; do
   eval "package_$_p() {
     $(declare -f "_package${_p#$pkgbase}")
