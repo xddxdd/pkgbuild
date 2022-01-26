@@ -6,9 +6,10 @@
 # Maintainer: Tobias Powalowski <tpowa@archlinux.org>
 # Maintainer: Thomas Baechler <thomas@archlinux.org>
 
-pkgbase=linux-xanmod-lantian               # Build stock -ARCH kernel
+_pkgsuffix=lantian
+pkgbase="linux-xanmod-$_pkgsuffix"
 
-_srctag=5.16.0-xanmod1
+_srctag=5.16.2-xanmod1
 pkgver=${_srctag//-/.}
 pkgrel=1
 
@@ -22,7 +23,7 @@ makedepends=(
   git
 )
 options=('!strip')
-_srcname=linux-xanmod-lantian
+_srcname="linux-xanmod-$_pkgsuffix"
 source=(
   "$_srcname::git+https://github.com/xanmod/linux.git#tag=$_srctag"
   config         # the main kernel config file
@@ -63,9 +64,6 @@ export KBUILD_BUILD_TIMESTAMP="$(date -Ru${SOURCE_DATE_EPOCH:+d @$SOURCE_DATE_EP
 prepare() {
   cd $_srcname
 
-  echo "Setting version..."
-  scripts/setlocalversion --save-scmversion
-
   local src
   for src in "${source[@]}"; do
     src="${src%%::*}"
@@ -77,7 +75,10 @@ prepare() {
 
   echo "Setting config..."
   cp ../config .config
+  scripts/config --set-str CONFIG_LOCALVERSION "-$_pkgsuffix"
   make olddefconfig
+
+  scripts/config --set-str CONFIG_LOCALVERSION "-$_pkgsuffix"
 
   make -s kernelrelease > version
   echo "Prepared %s version %s" "$pkgbase" "$(<version)"
@@ -110,7 +111,7 @@ _package() {
   make INSTALL_MOD_PATH="$pkgdir/usr" modules_install
 
   # remove build and source links
-  rm "$modulesdir"/{source,build}
+  rm -f "$modulesdir"/{source,build}
 
   echo "Fixing permissions..."
   chmod -Rc u=rwX,go=rX "$pkgdir"
