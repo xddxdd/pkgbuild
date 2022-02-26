@@ -2,15 +2,10 @@
 pkg
 src
 
+chromium-oqs-bin/*.tgz
 chromium-vaapi-oqs/boringssl
 chromium-vaapi-oqs/liboqs
-
-chromium-oqs-bin/*.tgz
-
 linux-lantian/linux-lantian
-
-linux-zen-lantian/linux-zen-lantian
-
-linux-xanmod-lantian/linux-xanmod-lantian
-
 linux-xanmod-lantian-60fps/linux-xanmod-lantian-60fps
+linux-xanmod-lantian/linux-xanmod-lantian
+linux-zen-lantian/linux-zen-lantian

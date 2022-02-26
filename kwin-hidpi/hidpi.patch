@@ -1,0 +1,446 @@
+diff --git a/autotests/test_xcb_window.cpp b/autotests/test_xcb_window.cpp
+index d9feed578015ec83037c9c955934b21917c05427..76474e7a23a7577cbb5aa1bcef83c98db27056b2 100644
+--- a/autotests/test_xcb_window.cpp
++++ b/autotests/test_xcb_window.cpp
+@@ -18,6 +18,11 @@
+ 
+ using namespace KWin;
+ 
++uint32_t Xcb::scale(uint value)
++{
++    return value;
++}
++
+ class TestXcbWindow : public QObject
+ {
+     Q_OBJECT
+diff --git a/src/atoms.cpp b/src/atoms.cpp
+index f1bee5b129b9402f9b8120375ad9681fe249789f..e92a70945d165df6f9898e006b22470f98815395 100644
+--- a/src/atoms.cpp
++++ b/src/atoms.cpp
+@@ -69,6 +69,7 @@ Atoms::Atoms()
+     , incr(QByteArrayLiteral("INCR"))
+     , wl_selection(QByteArrayLiteral("WL_SELECTION"))
+     , primary(QByteArrayLiteral("PRIMARY"))
++    , xwaylandGlobalOutputScale(QByteArrayLiteral("_XWAYLAND_GLOBAL_OUTPUT_SCALE"))
+     , m_dtSmWindowInfo(QByteArrayLiteral("_DT_SM_WINDOW_INFO"))
+     , m_motifSupport(QByteArrayLiteral("_MOTIF_WM_INFO"))
+     , m_helpersRetrieved(false)
+diff --git a/src/atoms.h b/src/atoms.h
+index 72321ce9c49b4c54e19b6b5b6e8ee51949453756..316e1257823450b4b93c770dcce93777192acd30 100644
+--- a/src/atoms.h
++++ b/src/atoms.h
+@@ -78,6 +78,7 @@ public:
+     Xcb::Atom incr;
+     Xcb::Atom wl_selection;
+     Xcb::Atom primary;
++    Xcb::Atom xwaylandGlobalOutputScale;
+ 
+     /**
+      * @internal
+diff --git a/src/events.cpp b/src/events.cpp
+index b9bb9bbd368e8a221e9ad9eeffcef12cd9f04e96..0a9fff69dffbdd03e8cdf9c82bc3f92d991643c3 100644
+--- a/src/events.cpp
++++ b/src/events.cpp
+@@ -257,19 +257,19 @@ bool Workspace::workspaceEvent(xcb_generic_event_t *e)
+                                         & (XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT | XCB_CONFIG_WINDOW_BORDER_WIDTH);
+             int i = 0;
+             if (value_mask & XCB_CONFIG_WINDOW_X) {
+-                values[i++] = event->x;
++                values[i++] = Xcb::scale(event->x);
+             }
+             if (value_mask & XCB_CONFIG_WINDOW_Y) {
+-                values[i++] = event->y;
++                values[i++] = Xcb::scale(event->y);
+             }
+             if (value_mask & XCB_CONFIG_WINDOW_WIDTH) {
+-                values[i++] = event->width;
++                values[i++] = Xcb::scale(event->width);
+             }
+             if (value_mask & XCB_CONFIG_WINDOW_HEIGHT) {
+-                values[i++] = event->height;
++                values[i++] = Xcb::scale(event->height);
+             }
+             if (value_mask & XCB_CONFIG_WINDOW_BORDER_WIDTH) {
+-                values[i++] = event->border_width;
++                values[i++] = Xcb::scale(event->border_width);
+             }
+             xcb_configure_window(connection(), event->window, value_mask, values);
+             return true;
+@@ -604,7 +604,7 @@ void X11Client::configureRequestEvent(xcb_configure_request_event_t *e)
+     }
+ 
+     if (e->value_mask & (XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_HEIGHT | XCB_CONFIG_WINDOW_WIDTH))
+-        configureRequest(e->value_mask, e->x, e->y, e->width, e->height, 0, false);
++        configureRequest(e->value_mask, Xcb::scale(e->x), Xcb::scale(e->y), Xcb::scale(e->width), Xcb::scale(e->height), 0, false);
+ 
+     if (e->value_mask & XCB_CONFIG_WINDOW_STACK_MODE)
+         restackWindow(e->sibling, e->stack_mode, NET::FromApplication, userTime(), false);
+@@ -1015,6 +1015,10 @@ bool X11Client::buttonReleaseEvent(xcb_window_t w, int button, int state, int x,
+ // return value matters only when filtering events before decoration gets them
+ bool X11Client::motionNotifyEvent(xcb_window_t w, int state, int x, int y, int x_root, int y_root)
+ {
++    x = Xcb::scale(x);
++    y = Xcb::scale(y);
++    x_root = Xcb::scale(x_root);
++    y_root = Xcb::scale(y_root);
+     if (waylandServer()) {
+         return true;
+     }
+diff --git a/src/main.cpp b/src/main.cpp
+index 086c982f584ff009374e391b27a0dd30c71213c7..746f3effdcfcd072e8fbe9ce8b85c9571396d7b4 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -389,6 +389,14 @@ static X11EventFilterContainer *takeEventFilter(X11EventFilter *eventFilter,
+     return nullptr;
+ }
+ 
++void Application::setXwaylandScale(uint scale)
++{
++    if (scale != m_xwaylandScale) {
++        m_xwaylandScale = scale;
++        Q_EMIT xwaylandScaleChanged();
++    }
++}
++
+ void Application::unregisterEventFilter(X11EventFilter *filter)
+ {
+     X11EventFilterContainer *container = nullptr;
+diff --git a/src/main.h b/src/main.h
+index 5c1440d3fce3788680109742c034ba5c2e1e75ed..8bf132755145b6c9982be56dbff720009e6be55a 100644
+--- a/src/main.h
++++ b/src/main.h
+@@ -78,6 +78,7 @@ public:
+          */
+         OperationModeXwayland
+     };
++    Q_ENUM(OperationMode)
+     ~Application() override;
+ 
+     void setConfigLock(bool lock);
+@@ -177,6 +178,13 @@ public:
+         return m_defaultScreen;
+     }
+ 
++    uint xwaylandScale() const
++    {
++        return m_xwaylandScale;
++    }
++
++    void setXwaylandScale(uint scale);
++
+     /**
+      * Returns @c true if we're in the middle of destroying the X11 connection.
+      */
+@@ -210,6 +218,7 @@ public:
+ Q_SIGNALS:
+     void x11ConnectionChanged();
+     void x11ConnectionAboutToBeDestroyed();
++    void xwaylandScaleChanged();
+     void workspaceCreated();
+     void screensCreated();
+     void platformCreated();
+@@ -289,6 +298,7 @@ private:
+     Platform *m_platform = nullptr;
+     bool m_terminating = false;
+     bool m_isClosingX11Connection = false;
++    uint m_xwaylandScale = 1;
+ };
+ 
+ inline static Application *kwinApp()
+diff --git a/src/netinfo.cpp b/src/netinfo.cpp
+index 518aa0c41a9cb3d74164c2ac0275f46881cd0434..6ecfac2f1392d1cc18350931a5b8d81fe9a78308 100644
+--- a/src/netinfo.cpp
++++ b/src/netinfo.cpp
+@@ -199,7 +199,7 @@ void RootInfo::moveResize(xcb_window_t w, int x_root, int y_root, unsigned long
+     X11Client *c = Workspace::self()->findClient(Predicate::WindowMatch, w);
+     if (c) {
+         updateXTime(); // otherwise grabbing may have old timestamp - this message should include timestamp
+-        c->NETMoveResize(x_root, y_root, (Direction)direction);
++        c->NETMoveResize(Xcb::scale(x_root), Xcb::scale(y_root), (Direction)direction);
+     }
+ }
+ 
+@@ -207,7 +207,7 @@ void RootInfo::moveResizeWindow(xcb_window_t w, int flags, int x, int y, int wid
+ {
+     X11Client *c = Workspace::self()->findClient(Predicate::WindowMatch, w);
+     if (c)
+-        c->NETMoveResizeWindow(flags, x, y, width, height);
++        c->NETMoveResizeWindow(flags, Xcb::scale(x), Xcb::scale(y), Xcb::scale(width), Xcb::scale(height));
+ }
+ 
+ void RootInfo::gotPing(xcb_window_t w, xcb_timestamp_t timestamp)
+diff --git a/src/utils/xcbutils.cpp b/src/utils/xcbutils.cpp
+index a6dc48e5a0c9ec18192a82f35d616b3fdc27f99c..b7e4caeab9c5c3063b0712bcb73bdc656b55d20e 100644
+--- a/src/utils/xcbutils.cpp
++++ b/src/utils/xcbutils.cpp
+@@ -611,5 +611,15 @@ bool Shm::init()
+     return true;
+ }
+ 
++uint32_t scale(uint value)
++{
++    return kwinApp()->xwaylandScale() * value;
++}
++
++QRect scale(const QRect &r)
++{
++    return QRect(scale(r.x()), scale(r.y()), scale(r.width()), scale(r.height()));
++}
++
+ } // namespace Xcb
+ } // namespace KWin
+diff --git a/src/utils/xcbutils.h b/src/utils/xcbutils.h
+index a914bc2891c278021b499a57415977a74726279e..8faf2af161712565d521ced79d87804f3224c672 100644
+--- a/src/utils/xcbutils.h
++++ b/src/utils/xcbutils.h
+@@ -33,6 +33,9 @@ namespace Xcb {
+ 
+ typedef xcb_window_t WindowId;
+ 
++uint32_t KWIN_EXPORT scale(uint value);
++QRect KWIN_EXPORT scale(const QRect &value);
++
+ // forward declaration of methods
+ static void defineCursor(xcb_window_t window, xcb_cursor_t cursor);
+ static void setInputFocus(xcb_window_t window, uint8_t revertTo = XCB_INPUT_FOCUS_POINTER_ROOT, xcb_timestamp_t time = xTime());
+@@ -1519,7 +1522,7 @@ void Window::setGeometry(uint32_t x, uint32_t y, uint32_t width, uint32_t height
+         return;
+     }
+     const uint16_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
+-    const uint32_t values[] = { x, y, width, height };
++    const uint32_t values[] = {Xcb::scale(x), Xcb::scale(y), Xcb::scale(width), Xcb::scale(height)};
+     xcb_configure_window(connection(), m_window, mask, values);
+ }
+ 
+@@ -1553,7 +1556,7 @@ void Window::resize(uint32_t width, uint32_t height)
+         return;
+     }
+     const uint16_t mask = XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
+-    const uint32_t values[] = { width, height };
++    const uint32_t values[] = {Xcb::scale(width), Xcb::scale(height)};
+     xcb_configure_window(connection(), m_window, mask, values);
+ }
+ 
+@@ -1692,12 +1695,7 @@ void Window::kill()
+ static inline void moveResizeWindow(WindowId window, const QRect &geometry)
+ {
+     const uint16_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT;
+-    const uint32_t values[] = {
+-        static_cast<uint32_t>(geometry.x()),
+-        static_cast<uint32_t>(geometry.y()),
+-        static_cast<uint32_t>(geometry.width()),
+-        static_cast<uint32_t>(geometry.height())
+-    };
++    const uint32_t values[] = {Xcb::scale(geometry.x()), Xcb::scale(geometry.y()), Xcb::scale(geometry.width()), Xcb::scale(geometry.height())};
+     xcb_configure_window(connection(), window, mask, values);
+ }
+ 
+@@ -1709,7 +1707,7 @@ static inline void moveWindow(xcb_window_t window, const QPoint& pos)
+ static inline void moveWindow(xcb_window_t window, uint32_t x, uint32_t y)
+ {
+     const uint16_t mask = XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y;
+-    const uint32_t values[] = { x, y };
++    const uint32_t values[] = {Xcb::scale(x), Xcb::scale(y)};
+     xcb_configure_window(connection(), window, mask, values);
+ }
+ 
+diff --git a/src/workspace.cpp b/src/workspace.cpp
+index 718cb75d2f60238b518df2a14221df855fca4983..078ded8260530066b5efbde30240491d59324edf 100644
+--- a/src/workspace.cpp
++++ b/src/workspace.cpp
+@@ -2060,8 +2060,8 @@ void Workspace::desktopResized()
+ 
+     if (rootInfo()) {
+         NETSize desktop_geometry;
+-        desktop_geometry.width = m_geometry.width();
+-        desktop_geometry.height = m_geometry.height();
++        desktop_geometry.width = Xcb::scale(m_geometry.width());
++        desktop_geometry.height = Xcb::scale(m_geometry.height());
+         rootInfo()->setDesktopGeometry(desktop_geometry);
+     }
+ 
+@@ -2247,13 +2247,9 @@ void Workspace::updateClientArea()
+         m_restrictedAreas = restrictedAreas;
+ 
+         if (rootInfo()) {
+-            NETRect r;
+             for (VirtualDesktop *desktop : desktops) {
+                 const QRect &workArea = m_workAreas[desktop];
+-                r.pos.x = workArea.x();
+-                r.pos.y = workArea.y();
+-                r.size.width = workArea.width();
+-                r.size.height = workArea.height();
++                NETRect r(Xcb::scale(workArea));
+                 rootInfo()->setWorkArea(desktop->x11DesktopNumber(), r);
+             }
+         }
+@@ -2873,7 +2868,7 @@ void Workspace::fixPositionAfterCrash(xcb_window_t w, const xcb_get_geometry_rep
+         // left and top needed due to narrowing conversations restrictions in C++11
+         const uint32_t left = frame.left;
+         const uint32_t top = frame.top;
+-        const uint32_t values[] = { geometry->x - left, geometry->y - top };
++        const uint32_t values[] = {Xcb::scale(geometry->x - left), Xcb::scale(geometry->y - top)};
+         xcb_configure_window(connection(), w, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
+     }
+ }
+diff --git a/src/x11client.cpp b/src/x11client.cpp
+index 15c2e967e7d8c414d78594444b0aa4ad7dfe79af..b2f722a00ced6076466aa03db3c5ff837deee84e 100644
+--- a/src/x11client.cpp
++++ b/src/x11client.cpp
+@@ -1324,8 +1324,14 @@ void X11Client::updateShape()
+             updateDecoration(true);
+         }
+         if (!isDecorated()) {
+-            xcb_shape_combine(connection(), XCB_SHAPE_SO_SET, XCB_SHAPE_SK_BOUNDING, XCB_SHAPE_SK_BOUNDING,
+-                              frameId(), clientPos().x(), clientPos().y(), window());
++            xcb_shape_combine(connection(),
++                              XCB_SHAPE_SO_SET,
++                              XCB_SHAPE_SK_BOUNDING,
++                              XCB_SHAPE_SK_BOUNDING,
++                              frameId(),
++                              Xcb::scale(clientPos().x()),
++                              Xcb::scale(clientPos().y()),
++                              window());
+         }
+     } else if (app_noborder) {
+         xcb_shape_mask(connection(), XCB_SHAPE_SO_SET, XCB_SHAPE_SK_BOUNDING, frameId(), 0, 0, XCB_PIXMAP_NONE);
+@@ -1373,10 +1379,22 @@ void X11Client::updateInputShape()
+         xcb_connection_t *c = connection();
+         xcb_shape_combine(c, XCB_SHAPE_SO_SET, XCB_SHAPE_SK_INPUT, XCB_SHAPE_SK_BOUNDING,
+                           shape_helper_window, 0, 0, frameId());
+-        xcb_shape_combine(c, XCB_SHAPE_SO_SUBTRACT, XCB_SHAPE_SK_INPUT, XCB_SHAPE_SK_BOUNDING,
+-                          shape_helper_window, clientPos().x(), clientPos().y(), window());
+-        xcb_shape_combine(c, XCB_SHAPE_SO_UNION, XCB_SHAPE_SK_INPUT, XCB_SHAPE_SK_INPUT,
+-                          shape_helper_window, clientPos().x(), clientPos().y(), window());
++        xcb_shape_combine(c,
++                          XCB_SHAPE_SO_SUBTRACT,
++                          XCB_SHAPE_SK_INPUT,
++                          XCB_SHAPE_SK_BOUNDING,
++                          shape_helper_window,
++                          Xcb::scale(clientPos().x()),
++                          Xcb::scale(clientPos().y()),
++                          window());
++        xcb_shape_combine(c,
++                          XCB_SHAPE_SO_UNION,
++                          XCB_SHAPE_SK_INPUT,
++                          XCB_SHAPE_SK_INPUT,
++                          shape_helper_window,
++                          Xcb::scale(clientPos().x()),
++                          Xcb::scale(clientPos().y()),
++                          window());
+         xcb_shape_combine(c, XCB_SHAPE_SO_SET, XCB_SHAPE_SK_INPUT, XCB_SHAPE_SK_INPUT,
+                           frameId(), 0, 0, shape_helper_window);
+     }
+@@ -3668,10 +3686,10 @@ void X11Client::sendSyntheticConfigureNotify()
+     u.event.response_type = XCB_CONFIGURE_NOTIFY;
+     u.event.event = window();
+     u.event.window = window();
+-    u.event.x = m_clientGeometry.x();
+-    u.event.y = m_clientGeometry.y();
+-    u.event.width = m_clientGeometry.width();
+-    u.event.height = m_clientGeometry.height();
++    u.event.x = Xcb::scale(m_clientGeometry.x());
++    u.event.y = Xcb::scale(m_clientGeometry.y());
++    u.event.width = Xcb::scale(m_clientGeometry.width());
++    u.event.height = Xcb::scale(m_clientGeometry.height());
+     u.event.border_width = 0;
+     u.event.above_sibling = XCB_WINDOW_NONE;
+     u.event.override_redirect = 0;
+@@ -3968,7 +3986,7 @@ void X11Client::NETMoveResizeWindow(int flags, int x, int y, int width, int heig
+     if (flags & (1 << 11)) {
+         value_mask |= XCB_CONFIG_WINDOW_HEIGHT;
+     }
+-    configureRequest(value_mask, x, y, width, height, gravity, true);
++    configureRequest(value_mask, Xcb::scale(x), Xcb::scale(y), Xcb::scale(width), Xcb::scale(height), gravity, true);
+ }
+ 
+ bool X11Client::isMovable() const
+@@ -4524,7 +4542,7 @@ bool X11Client::doStartInteractiveMoveResize()
+         // something with Enter/LeaveNotify events, looks like XFree performance problem or something *shrug*
+         // (https://lists.kde.org/?t=107302193400001&r=1&w=2)
+         QRect r = workspace()->clientArea(FullArea, this);
+-        m_moveResizeGrabWindow.create(r, XCB_WINDOW_CLASS_INPUT_ONLY, 0, nullptr, rootWindow());
++        m_moveResizeGrabWindow.create(Xcb::scale(r), XCB_WINDOW_CLASS_INPUT_ONLY, 0, nullptr, rootWindow());
+         m_moveResizeGrabWindow.map();
+         m_moveResizeGrabWindow.raise();
+         updateXTime();
+diff --git a/src/xwl/xwayland.cpp b/src/xwl/xwayland.cpp
+index 3257d9bd02d119538fdeed88b9602c8a31296a55..2724e9a82720d7f8e02b419c8a230a5f9c824424 100644
+--- a/src/xwl/xwayland.cpp
++++ b/src/xwl/xwayland.cpp
+@@ -14,15 +14,18 @@
+ #include "dnd.h"
+ #include "xwldrophandler.h"
+ 
++#include "abstract_client.h"
+ #include "abstract_output.h"
++#include "atoms.h"
+ #include "main_wayland.h"
+ #include "options.h"
+ #include "utils/common.h"
+ #include "platform.h"
+ #include "utils/xcbutils.h"
+ #include "wayland_server.h"
+-#include "xwayland_logging.h"
++#include "workspace.h"
+ #include "x11eventfilter.h"
++#include "xwayland_logging.h"
+ 
+ #include "xwaylandsocket.h"
+ 
+@@ -47,9 +50,10 @@
+ #include <unistd.h>
+ #endif
+ 
+-#include <sys/socket.h>
+ #include <cerrno>
+ #include <cstring>
++#include <screens.h>
++#include <sys/socket.h>
+ 
+ namespace KWin
+ {
+@@ -439,6 +443,10 @@ void Xwayland::handleXwaylandReady()
+ 
+     delete m_xrandrEventsFilter;
+     m_xrandrEventsFilter = new XrandrEventFilter(this);
++    connect(kwinApp(), &Application::xwaylandScaleChanged, this, &Xwayland::refreshScaling);
++
++    kwinApp()->setXwaylandScale(screens()->maxScale());
++    refreshScaling();
+ }
+ 
+ void Xwayland::updatePrimary(AbstractOutput *primaryOutput)
+@@ -561,5 +569,19 @@ KWaylandServer::AbstractDropHandler *Xwayland::xwlDropHandler()
+     return nullptr;
+ }
+ 
++void Xwayland::refreshScaling()
++{
++    if (!atoms->xwaylandGlobalOutputScale.isValid()) {
++        qCDebug(KWIN_XWL) << "Xwayland scaling unsupported";
++        return;
++    }
++
++    const uint scale = kwinApp()->xwaylandScale();
++    xcb_connection_t *xcbConn = kwinApp()->x11Connection();
++    qCDebug(KWIN_XWL) << "Scaling Xwayland to" << scale;
++    xcb_change_property(xcbConn, XCB_PROP_MODE_REPLACE, rootWindow(), atoms->xwaylandGlobalOutputScale, XCB_ATOM_CARDINAL, sizeof(scale) * 8, 1, &scale);
++    xcb_flush(xcbConn);
++}
++
+ } // namespace Xwl
+ } // namespace KWin
+diff --git a/src/xwl/xwayland.h b/src/xwl/xwayland.h
+index 54cfb5f15dcc3c512c657bba4ba35769fb6d9d98..9efaee7cd668829d4c7aa9f6520429839de9dc17 100644
+--- a/src/xwl/xwayland.h
++++ b/src/xwl/xwayland.h
+@@ -124,6 +124,7 @@ private:
+     bool startInternal();
+     void stopInternal();
+     void restartInternal();
++    void refreshScaling();
+ 
+     bool createX11Connection();
+     void destroyX11Connection();
