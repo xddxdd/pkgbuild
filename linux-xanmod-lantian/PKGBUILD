@@ -9,7 +9,7 @@
 _pkgsuffix=lantian
 pkgbase="linux-xanmod-$_pkgsuffix"
 
-_srctag=5.16.8-xanmod1
+_srctag=5.16.12-xanmod1
 pkgver=${_srctag//-/.}
 pkgrel=1
 
@@ -39,6 +39,8 @@ source=(
   0006-uksm.patch::https://gitlab.com/sirlucjan/kernel-patches/-/raw/master/5.16/uksm-patches/0001-UKSM-for-5.16.patch
   # https://lore.kernel.org/lkml/20211115133640.2231-1-abhsahu@nvidia.com/T/
   0007-vfio-pci-d3cold.patch
+  # https://forum.manjaro.org/t/mute-switch-led-not-working-hp-omen-15/103658/16
+  0008-hp-omen-mute-led.patch
 )
 validpgpkeys=(
   'ABAF11C65A2970B130ABE3C479BE3E4300411886'  # Linus Torvalds
@@ -46,6 +48,7 @@ validpgpkeys=(
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
 sha256sums=(
+  'SKIP'
   'SKIP'
   'SKIP'
   'SKIP'
