@@ -1,0 +1,12 @@
+diff --git a/drivers/gpu/drm/virtio/virtgpu_plane.c b/drivers/gpu/drm/virtio/virtgpu_plane.c
+index 6d3cc9e238a4..e4c7ec25f9c9 100644
+--- a/drivers/gpu/drm/virtio/virtgpu_plane.c
++++ b/drivers/gpu/drm/virtio/virtgpu_plane.c
+@@ -402,6 +402,7 @@ struct drm_plane *virtio_gpu_plane_init(struct virtio_gpu_device *vgdev,
+ 		goto err_plane_init;
+ 
+ 	drm_plane_helper_add(plane, funcs);
++	drm_plane_enable_fb_damage_clips(primary);
+ 	return plane;
+ 
+ err_plane_init:

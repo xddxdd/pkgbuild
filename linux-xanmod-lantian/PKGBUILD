@@ -9,7 +9,7 @@
 _pkgsuffix=lantian
 pkgbase="linux-xanmod-$_pkgsuffix"
 
-_srctag=5.16.12-xanmod1
+_srctag=5.17.3-xanmod1
 pkgver=${_srctag//-/.}
 pkgrel=1
 
@@ -33,12 +33,10 @@ source=(
   0003-intel-drm-use-max-clock.patch
   # Extracted from https://github.com/pelrun/hp-omen-linux-module
   0004-hp-omen-fourzone.patch
-  # Adapted from https://github.com/zhmars/cjktty-patches
-  0005-cjktty.patch
-  # https://gitlab.com/sirlucjan/kernel-patches
-  0006-uksm.patch::https://gitlab.com/sirlucjan/kernel-patches/-/raw/master/5.16/uksm-patches/0001-UKSM-for-5.16.patch
-  # https://lore.kernel.org/lkml/20211115133640.2231-1-abhsahu@nvidia.com/T/
-  0007-vfio-pci-d3cold.patch
+
+  0005-fake-uptime.patch
+  0006-virtio-gpu-damage.patch
+
   # https://forum.manjaro.org/t/mute-switch-led-not-working-hp-omen-15/103658/16
   0008-hp-omen-mute-led.patch
 )
@@ -48,7 +46,6 @@ validpgpkeys=(
   'A2FF3A36AAA56654109064AB19802F8B0D70FC30'  # Jan Alexander Steffens (heftig)
 )
 sha256sums=(
-  'SKIP'
   'SKIP'
   'SKIP'
   'SKIP'
